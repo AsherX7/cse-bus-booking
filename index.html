@@ -446,8 +446,8 @@ const ADMIN_PASSCODE = "changeme";
         </div>
         <div class="cabin">
           <div class="front-strip">
-            <div class="driver-badge"><span class="steer"></span>Driver</div>
             <div class="door-badge">Door</div>
+            <div class="driver-badge"><span class="steer"></span>Driver</div>
           </div>
           <div id="seatMap">${state.loading ? '' : buildSeatMapHTML(vehicle)}</div>
         </div>
@@ -517,7 +517,7 @@ const ADMIN_PASSCODE = "changeme";
             <div class="side" style="opacity:.35;font-size:10.5px;color:var(--muted-2);align-self:center;">entry</div>
           </div>`;
       } else if(row.type === 'bus'){
-        // 2 seats door-side, 3 seats driver-side.
+        // Door-side (2 seats) on the left, driver-side (3 seats) on the right.
         html += `
           <div class="row">
             <div class="side">${row.left.map(s => seatCell(s)).join('')}</div>
@@ -525,7 +525,7 @@ const ADMIN_PASSCODE = "changeme";
             <div class="side">${row.right.map(s => seatCell(s)).join('')}</div>
           </div>`;
       } else if(row.type === 'trav'){
-        // 2 seats one side, single seat the other.
+        // Door-side (2 seats) on the left, driver-side (1 seat) on the right.
         html += `
           <div class="row">
             <div class="side">${row.left.map(s => seatCell(s)).join('')}</div>
