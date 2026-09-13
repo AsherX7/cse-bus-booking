@@ -277,6 +277,9 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
 
+// Change this to your own passcode — required to release someone else's seat.
+const ADMIN_PASSCODE = "changeme";
+
 (function(){
 
   // ---------------- Vehicle / seat configuration ----------------
@@ -601,14 +604,25 @@ const db = getDatabase(firebaseApp);
           <h2>Seat booked</h2>
           <p class="sub">This seat is currently reserved.</p>
           <div class="booked-by">${escapeHtml(name)}</div>
+          <p class="sub" style="margin-top:14px;">Only an admin can release someone else's seat.</p>
+          <input type="password" id="adminPass" placeholder="Admin passcode" />
+          <div id="passError" style="color:var(--release);font-size:12px;margin-top:8px;display:none;">Incorrect passcode.</div>
           <button class="release" id="releaseBtn">Release this seat</button>
         </div>
       </div>`;
     document.getElementById('backdrop').addEventListener('click', (e) => { if(e.target.id === 'backdrop') closeModal(); });
+    const passInput = document.getElementById('adminPass');
+    const passError = document.getElementById('passError');
     document.getElementById('releaseBtn').addEventListener('click', async () => {
+      if(passInput.value !== ADMIN_PASSCODE){
+        passError.style.display = 'block';
+        passInput.focus();
+        return;
+      }
       closeModal();
       await releaseSeat(state.vehicle, state.section, seatNum);
     });
+    passInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') document.getElementById('releaseBtn').click(); });
   }
 
   // ---------------- List view ----------------
