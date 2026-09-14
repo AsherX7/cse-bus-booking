@@ -6,6 +6,7 @@
 <title>CSE (AI), S3 — Coach Booking</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --bg: #08080a;
@@ -178,6 +179,13 @@
 
   /* ---------- List view ---------- */
   .roster-section{ margin-top:26px; }
+  .roster-head{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .export-btn{
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold)); border:none;
+    color:#14120c; font-weight:800; padding:10px 16px; border-radius:10px; font-size:13px;
+    display:flex; align-items:center; gap:7px; white-space:nowrap;
+  }
+  .export-btn:hover{ filter:brightness(1.05); }
   .roster-vehicle{
     font-family:'Fraunces', serif; font-size:20px; color:var(--gold-bright); margin: 30px 0 12px;
     padding-bottom:8px; border-bottom:1px solid var(--hairline);
@@ -248,6 +256,7 @@
     .row .side{ gap:6px; }
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -637,9 +646,12 @@ const ADMIN_PASSCODE = "changeme";
     }
 
     let html = `
-      <div class="hero">
-        <h1>Roster</h1>
-        <p>Everyone who has booked a seat so far, grouped by vehicle and leg of the trip.</p>
+      <div class="hero roster-head">
+        <div>
+          <h1>Roster</h1>
+          <p>Everyone who has booked a seat so far, grouped by vehicle and leg of the trip.</p>
+        </div>
+        <button class="export-btn" id="exportBtn">Download as Excel</button>
       </div>`;
 
     Object.values(VEHICLES).forEach(vehicle => {
@@ -662,6 +674,27 @@ const ADMIN_PASSCODE = "changeme";
     });
 
     app.innerHTML = html;
+    document.getElementById('exportBtn').addEventListener('click', exportRosterToExcel);
+  }
+
+  function exportRosterToExcel(){
+    if(!listCache || typeof XLSX === 'undefined') return;
+    const rows = [['Vehicle', 'Leg', 'Seat', 'Name']];
+    Object.values(VEHICLES).forEach(vehicle => {
+      SECTIONS.forEach(sec => {
+        const bookings = (listCache[vehicle.key] && listCache[vehicle.key][sec.key]) || {};
+        const seatNums = Object.keys(bookings).map(Number).sort((a,b) => a - b);
+        seatNums.forEach(num => {
+          rows.push([vehicle.label, sec.label, num, bookings[String(num)]]);
+        });
+      });
+    });
+    const sheet = XLSX.utils.aoa_to_sheet(rows);
+    sheet['!cols'] = [{ wch: 20 }, { wch: 22 }, { wch: 8 }, { wch: 28 }];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Seat Bookings');
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `cse-ai-s3-seat-bookings-${today}.xlsx`);
   }
 
   // ---------------- Init ----------------
